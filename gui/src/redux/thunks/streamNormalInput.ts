@@ -26,6 +26,7 @@ import { applyToolOverrides } from "core/tools/applyToolOverrides";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
+import { captureConversation } from "core/fl/FusionLayerCapture.js";
 import posthog from "posthog-js";
 import {
   selectCurrentToolCalls,
@@ -228,6 +229,36 @@ export const streamNormalInput = createAsyncThunk<
       // Attach prompt log and end thinking for reasoning models
       if (next.done && next.value) {
         dispatch(addPromptCompletionPair([next.value]));
+
+        // FusionLayer: capture conversation turn after assistant response
+        try {
+          const captureState = getState();
+          const history = captureState.session.history;
+          const flMessages = history
+            .filter((h: { message: { role: string; content: unknown } }) =>
+              h.message.role === "user" || h.message.role === "assistant",
+            )
+            .map((h: { message: { role: string; content: unknown } }) => ({
+              role: h.message.role,
+              content:
+                typeof h.message.content === "string"
+                  ? h.message.content
+                  : JSON.stringify(h.message.content),
+            }));
+          const firstUserMsg = flMessages.find(
+            (m: { role: string }) => m.role === "user",
+          );
+          void captureConversation({
+            conversationId: captureState.session.id,
+            messages: flMessages,
+            title: typeof firstUserMsg?.content === "string"
+              ? firstUserMsg.content.slice(0, 120)
+              : undefined,
+            fetch: (url, init) => fetch(url, init),
+          });
+        } catch {
+          // capture errors must never break the main flow
+        }
 
         try {
           extra.ideMessenger.post("devdata/log", {
