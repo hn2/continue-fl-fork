@@ -1,4 +1,4 @@
-import { isConsentGranted, loadSettings, saveSettings } from "./settings.js";
+import { isConsentGranted, loadSettings } from "./settings.js";
 import { redactMessages, type Message } from "./redact.js";
 
 const UPLOAD_TIMEOUT_MS = 10000;
@@ -22,7 +22,7 @@ export async function captureConversation(
 ): Promise<CaptureResult> {
   const settings = loadSettings();
 
-  if (!settings?.enabled || !settings.writeEnabled) {
+  if (!settings?.enableWrite) {
     return { skipped: "write_disabled" };
   }
   if (settings.privacyMode === "incognito") {
@@ -86,7 +86,6 @@ export async function captureConversation(
     clearTimeout(timeoutId);
 
     if (response.status === 401) {
-      saveSettings({ connectionStatus: "error" });
       return { error: "unauthorized" };
     }
 

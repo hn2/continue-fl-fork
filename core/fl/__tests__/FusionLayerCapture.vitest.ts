@@ -3,16 +3,14 @@ import { captureConversation } from "../FusionLayerCapture.js";
 import type { FusionLayerSettings } from "../settings.js";
 
 const BASE_SETTINGS: FusionLayerSettings = {
-  enabled: true,
-  readEnabled: true,
-  writeEnabled: true,
+  enableRead: true,
+  enableWrite: true,
   engineUrl: "https://api.fusionlayer.app",
   apiKey: "test-key-abc123",
   privacyMode: "smart",
   maxArtifacts: 10,
   relevanceThreshold: 0.7,
-  connectionStatus: "connected",
-  consent: { granted_at: "2026-05-21T10:00:00Z" },
+  consentDate: "2026-05-21",
 };
 
 function setSettings(s: Partial<FusionLayerSettings>) {
@@ -31,8 +29,8 @@ describe("captureConversation", () => {
   beforeEach(() => localStorage.clear());
   afterEach(() => localStorage.clear());
 
-  it("returns skipped when writeEnabled is false", async () => {
-    setSettings({ writeEnabled: false });
+  it("returns skipped when enableWrite is false", async () => {
+    setSettings({ enableWrite: false });
     const result = await captureConversation({
       conversationId: "conv-1",
       messages: MESSAGES,
@@ -51,8 +49,8 @@ describe("captureConversation", () => {
     expect(result.skipped).toBe("incognito");
   });
 
-  it("returns skipped when consent not granted", async () => {
-    setSettings({ consent: undefined });
+  it("returns skipped when consent not granted (consentDate null)", async () => {
+    setSettings({ consentDate: null });
     const result = await captureConversation({
       conversationId: "conv-3",
       messages: MESSAGES,
@@ -61,23 +59,8 @@ describe("captureConversation", () => {
     expect(result.skipped).toBe("consent_not_granted");
   });
 
-  it("returns skipped when consent revoked", async () => {
-    setSettings({
-      consent: {
-        granted_at: "2026-05-01T00:00:00Z",
-        revoked_at: "2026-05-10T00:00:00Z",
-      },
-    });
-    const result = await captureConversation({
-      conversationId: "conv-4",
-      messages: MESSAGES,
-      fetch: vi.fn(),
-    });
-    expect(result.skipped).toBe("consent_not_granted");
-  });
-
   it("returns skipped when no api key", async () => {
-    setSettings({ apiKey: undefined });
+    setSettings({ apiKey: "" });
     const result = await captureConversation({
       conversationId: "conv-5",
       messages: MESSAGES,
@@ -159,7 +142,7 @@ describe("captureConversation", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("returns error on 401 and updates connectionStatus", async () => {
+  it("returns error on 401", async () => {
     setSettings({});
     const mockFetch = vi.fn(
       async () => new Response("Unauthorized", { status: 401 }),
@@ -172,8 +155,6 @@ describe("captureConversation", () => {
     });
 
     expect(result.error).toBe("unauthorized");
-    const s = JSON.parse(localStorage.getItem("fusionlayer_settings")!);
-    expect(s.connectionStatus).toBe("error");
   });
 
   it("links prev_capture_record_id in chained captures", async () => {

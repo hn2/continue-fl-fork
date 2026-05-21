@@ -1,27 +1,25 @@
 export interface FusionLayerSettings {
-  enabled: boolean;
-  readEnabled: boolean;
-  writeEnabled: boolean;
+  enableRead: boolean;
+  enableWrite: boolean;
   engineUrl: string;
-  apiKey?: string;
+  apiKey: string;
   privacyMode: "smart" | "private" | "incognito";
   maxArtifacts: number;
   relevanceThreshold: number;
-  connectionStatus: "disconnected" | "connected" | "error";
-  consent?: { granted_at?: string; revoked_at?: string };
+  consentDate: string | null;
 }
 
 export const STORAGE_KEY = "fusionlayer_settings";
 
 export const DEFAULT_SETTINGS: FusionLayerSettings = {
-  enabled: false,
-  readEnabled: true,
-  writeEnabled: true,
+  enableRead: false,
+  enableWrite: false,
   engineUrl: "https://api.fusionlayer.app",
+  apiKey: "",
   privacyMode: "smart",
   maxArtifacts: 10,
   relevanceThreshold: 0.7,
-  connectionStatus: "disconnected",
+  consentDate: null,
 };
 
 export function loadSettings(): FusionLayerSettings | null {
@@ -31,7 +29,7 @@ export function loadSettings(): FusionLayerSettings | null {
         ? localStorage.getItem(STORAGE_KEY)
         : null;
     if (!raw) return null;
-    return JSON.parse(raw) as FusionLayerSettings;
+    return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<FusionLayerSettings>) };
   } catch {
     return null;
   }
@@ -44,12 +42,5 @@ export function saveSettings(patch: Partial<FusionLayerSettings>): void {
 }
 
 export function isConsentGranted(settings: FusionLayerSettings | null): boolean {
-  if (!settings?.consent?.granted_at) return false;
-  if (settings.consent.revoked_at) {
-    return (
-      new Date(settings.consent.granted_at) >
-      new Date(settings.consent.revoked_at)
-    );
-  }
-  return true;
+  return !!(settings?.consentDate);
 }

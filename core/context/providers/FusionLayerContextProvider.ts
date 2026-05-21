@@ -4,35 +4,10 @@ import {
   ContextProviderExtras,
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
-
-interface FusionLayerSettings {
-  enabled: boolean;
-  readEnabled: boolean;
-  writeEnabled: boolean;
-  engineUrl: string;
-  apiKey?: string;
-  privacyMode: "smart" | "private" | "incognito";
-  maxArtifacts: number;
-  relevanceThreshold: number;
-  connectionStatus: "disconnected" | "connected" | "error";
-  consent?: { granted_at?: string; revoked_at?: string };
-}
+import { loadSettings, saveSettings } from "../../fl/settings.js";
 
 const DEFAULT_ENGINE_URL = "https://api.fusionlayer.app";
 const RETRIEVE_TIMEOUT_MS = 3000;
-
-function loadSettings(): FusionLayerSettings | null {
-  try {
-    const raw =
-      typeof localStorage !== "undefined"
-        ? localStorage.getItem("fusionlayer_settings")
-        : null;
-    if (!raw) return null;
-    return JSON.parse(raw) as FusionLayerSettings;
-  } catch {
-    return null;
-  }
-}
 
 function formatDate(iso: string): string {
   try {
@@ -79,9 +54,9 @@ class FusionLayerContextProvider extends BaseContextProvider {
       (this.options as { maxArtifacts?: number })?.maxArtifacts ??
       10;
 
-    // Guard: disabled or privacy mode blocks read
+    // Guard: read disabled or privacy mode blocks read
     if (settings) {
-      if (!settings.enabled || !settings.readEnabled) return [];
+      if (!settings.enableRead) return [];
       if (settings.privacyMode === "incognito") return [];
     }
 
@@ -107,13 +82,7 @@ class FusionLayerContextProvider extends BaseContextProvider {
       clearTimeout(timeoutId);
 
       if (response.status === 401) {
-        // Update connection status in localStorage
-        if (typeof localStorage !== "undefined" && settings) {
-          localStorage.setItem(
-            "fusionlayer_settings",
-            JSON.stringify({ ...settings, connectionStatus: "error" }),
-          );
-        }
+        // connectionStatus is managed by the UI only — not persisted here
         return [];
       }
 
