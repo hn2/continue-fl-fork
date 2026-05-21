@@ -1,6 +1,17 @@
 import { JSONContent } from "@tiptap/react";
 import { OnboardingStatus } from "../components/OnboardingCard";
 
+export interface FusionLayerSettings {
+  enableRead: boolean;
+  enableWrite: boolean;
+  engineUrl: string;
+  apiKey: string;
+  privacyMode: "smart" | "private" | "incognito";
+  maxArtifacts: number;
+  relevanceThreshold: number;
+  consentDate: string | null;
+}
+
 type LocalStorageTypes = {
   isExploreDialogOpen: boolean;
   hasDismissedExploreDialog: boolean;
@@ -17,6 +28,7 @@ type LocalStorageTypes = {
   disableIndexing: boolean;
   hasExitedFreeTrial: boolean;
   hasDismissedCliInstallBanner: boolean;
+  fusionlayer_settings: FusionLayerSettings;
 };
 
 export enum LocalStorageKey {

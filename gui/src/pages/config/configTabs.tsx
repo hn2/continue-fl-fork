@@ -7,10 +7,12 @@ import {
   DocumentIcon,
   PencilIcon,
   QuestionMarkCircleIcon,
+  SparklesIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { ConfigSection } from "./components/ConfigSection";
 import { ConfigsSection } from "./sections/ConfigsSection";
+import { FusionLayerSection } from "./sections/FusionLayerSection";
 import { HelpSection } from "./sections/HelpSection";
 import { IndexingSettingsSection } from "./sections/IndexingSettingsSection";
 import { ModelsSection } from "./sections/ModelsSection";
@@ -81,6 +83,16 @@ export const topTabSections: TabSection[] = [
         icon: (
           <WrenchScrewdriverIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
         ),
+      },
+      {
+        id: "fusionlayer",
+        label: "FusionLayer",
+        component: (
+          <ConfigSection>
+            <FusionLayerSection />
+          </ConfigSection>
+        ),
+        icon: <SparklesIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
       },
     ],
   },
