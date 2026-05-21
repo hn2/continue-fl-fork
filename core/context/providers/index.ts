@@ -17,6 +17,7 @@ import FolderContextProvider from "./FolderContextProvider";
 import GitCommitContextProvider from "./GitCommitContextProvider";
 import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider";
 import GitLabMergeRequestContextProvider from "./GitLabMergeRequestContextProvider";
+import FusionLayerContextProvider from "./FusionLayerContextProvider";
 import GoogleContextProvider from "./GoogleContextProvider";
 import GreptileContextProvider from "./GreptileContextProvider";
 import HttpContextProvider from "./HttpContextProvider";
@@ -45,6 +46,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
   FileTreeContextProvider,
   GitHubIssuesContextProvider,
+  FusionLayerContextProvider,
   GoogleContextProvider,
   TerminalContextProvider,
   DebugLocalsProvider,
